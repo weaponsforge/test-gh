@@ -1,6 +1,7 @@
-# Sample workflow for building and deploying a Jekyll site to GitHub Pages
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Deploy to GitHub Pages
 
+# This workflow will trigger on any tag/release created on *any* branch
+# Make sure to create tags/releases only from the "master" branch for consistency
 on:
   # Runs on pushes targeting the default branch
   push:
@@ -21,35 +22,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Build job
-  build:
+  lint-client:
+    name: Lint and Export client
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout the repository
         uses: actions/checkout@v3
-      - name: Setup Pages
-        uses: actions/configure-pages@v2
       - name: Export static files
         run: |
           mkdir out
           mv index.html out/index.html
       - name: Disable Jekyll
         run: touch out/.nojekyll
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      - name: Archive Development Artifact
+        uses: actions/upload-artifact@v3
         with:
           name: main-out
           path: out
           retention-days: 3
 
-  # Deployment job
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  deploy-client:
+    name: Deploy client to Github Pages
+    needs: lint-client
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v1
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: main-out
+      - name: List files for publish
+        run: ls -l -a
+      - name: Deploy to Github Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
