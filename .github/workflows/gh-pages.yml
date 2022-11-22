@@ -30,7 +30,9 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v2
       - name: Export static files
-        run: mv index.html out/index.html
+        run: |
+          mkdir out
+          mv index.html out/index.html
       - name: Disable Jekyll
         run: touch out/.nojekyll
       - name: Upload artifact
